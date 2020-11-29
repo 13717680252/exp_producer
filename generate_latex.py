@@ -3,15 +3,17 @@ import yaml
 import os
 import argparse
 def run(args):
-    templete_train = "{} --do_train --yaml_args {} \n"
-    templete_test = "{} --do_test --yaml_args {} \n"
+    templete_train = "python {} --do_train --yaml_args {} \n"
+    templete_test = "python {} --do_test --yaml_args {} \n"
     config_yaml = yaml.load(open(args.yaml))
     random_seeds = args.seeds
     file_list = []
     out_dir = args.out_dir  ## output file for yaml and bash
+    out_dir=os.path.abspath(out_dir)
     cli = args.cli
+    cli = os.path.abspath(cli)
     out_name = args.exp_name
-    log_dir = config_yaml["log"]["log_dir"]
+    log_dir = config_yaml["logging"]["log_dir"]
     for i in map(int,random_seeds):
         config_yaml["training"]["seed"] = i
         cur_name = "{}-{}".format(args.exp_name, i)
@@ -23,7 +25,7 @@ def run(args):
         for fname in file_list:
             f.write(templete_train.format(cli, os.sep.join([out_dir, fname]) + ".yaml"))
             f.write(templete_test.format(cli, os.sep.join([out_dir, fname]) + ".yaml"))
-        gather_cli = os.sep.join(os.getcwd(), "gather.py")
+        gather_cli = os.sep.join((os.getcwd(), "gather.py"))
         gather = "python {} {} {} {}".format(gather_cli, log_dir, '"{}"'.format(" ".join(file_list)),
                                              os.sep.join([out_dir, out_name]) + ".tex")
         f.write(gather + "\n")
@@ -34,7 +36,7 @@ parser.add_argument("yaml",type=str,help="base yaml config dir")
 parser.add_argument("out_dir", type=str,help="output dir for bash and yaml configs")
 parser.add_argument("cli",type=str,help="cli for training and testing")
 parser.add_argument("exp_name",type=str,help="exp identifiers")
-parser.add_argument("seeds",type=list,default=[1,11,21,32,42])
+parser.add_argument("--seeds",type=list,default=[1,11,21,32,42])
 args=parser.parse_args()
 run(args)
 
